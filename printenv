@@ -1,0 +1,101 @@
+/* 
+ * printenv -- print all or part of environment
+ * Usage: printenv [variable...]
+ * If no arguments are given, print the entire environment.
+ * If one or more variable names are given, print the value of
+ * each one that is set, and nothing for ones that are not set.
+ * Exit status:
+ * 0 if all variables specified were found
+ * 1 if not
+ * 2 if some other error occurred
+ */
+
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include "system.h"
+
+static struct option const longopts[] = {
+    {"null", no_argument, NULL, '0'},
+    {NULL, 0, NULL, 0}
+};
+
+void
+usage (int status)
+{
+    fputs ("-0, --null end each output line with NUL, not newline\n", stdout);
+    exit (status);
+}
+
+int
+main (int argc, char **argv)
+{
+    char **env;
+    char *ep, *ap;
+    int i;
+    int ok;
+    int optc;
+    int opt_nul_terminate_output = 0;
+    /*
+     * By default, getopt permutes the contents of argv as it scans, so
+     * that eventually all the nonoptions are at the end.
+     * There are two other modes:
+     * the first character of optstring is '+' or '-'.
+     * If the first character of optstring is '+' or the environment
+     * variable POSIXLY_CORRECT is set,  then  option  processing
+     * stops as soon as a nonoption argument is encountered.
+     * If the first character of optstring is '-', then each nonoption
+     * argv-element is handled as if it were the argument of an option with
+     * character '\1'.
+     */
+    while ((optc = getopt_long (argc, argv, "+iu:0", longopts, NULL)) != -1) {
+        switch (optc) {
+            case '0':
+                opt_nul_terminate_output = 1;
+                break;
+            default:
+                exit(2);
+        }
+    }
+
+    if (optind >= argc) {
+        for (env = environ; *env != NULL; ++env) {
+            printf ("%s%c", *env, opt_nul_terminate_output ? '\0' : '\n');
+        }
+
+        ok = 1;
+    } else {
+        int matches = 0;
+
+        for (i = optind; i < argc; ++i) {
+            int matched = 0;
+
+            /* 
+             * 'printenv a=b' is silent, even if 'a=b=c' is in environ.
+             * It actually excludes the usage of 'printenv a=b'.
+             */
+            if (strchr (argv[i], '=')) {
+                continue;
+            }
+
+            for (env = environ; *env; ++env) {
+                ep = *env;
+                ap = argv[i];
+
+                while (*ep != '\0' && *ap != '\0' && *ep++ == *ap++) {
+                    if (*ep == '=' && *ap == '\0') {
+                        printf ("%s%c", ep + 1, opt_nul_terminate_output ? '\0' : '\n');
+                        matched = 1;
+                        break;
+                    }
+                }
+            }
+
+            matches += matched;
+        }
+
+        ok = (matches == argc - optind);
+    }
+
+    return ok ? EXIT_SUCCESS : EXIT_FAILURE;
+}
