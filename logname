@@ -1,0 +1,30 @@
+/* 
+ * logname -- print user's login name
+ * I've deleted some unimportant codes
+ * to focus on the functionality
+ */
+
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <error.h>
+
+int
+main (int argc, char **argv)
+{
+    char *cp;
+    /*
+     * getlogin returns a pointer to a string containing the name
+     * of the user logged in on the controlling terminal of the
+     * process, or a null pointer if this information cannot be
+     * determined.
+     */
+    cp = getlogin ();
+    if (! cp) {
+        error (EXIT_FAILURE, 0, "no login name");
+    }
+    puts (cp);
+    return EXIT_SUCCESS;
+}
+
