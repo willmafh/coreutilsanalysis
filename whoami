@@ -1,0 +1,47 @@
+/* whoami -- print effective userid */
+/* Equivalent to 'id -un'. */
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
+#include <error.h>
+#include <errno.h>
+#include <stdlib.h>
+
+int
+main (int argc, char **argv)
+{
+    /*
+     * The passwd structure is defined in <pwd.h> as follows:
+     * struct passwd {
+     *     char *pw_name;    // username
+     *     char *pw_passwd;  // user password
+     *     uid_t pw_uid;     // user ID
+     *     git_t pw_gid;     // group ID
+     *     char *pw_gecos;   // user information
+     *     char *pw_dir;     // home directory
+     *     char *pw_shell;   // shell program
+     * };
+     */
+    struct passwd *pw;
+    uid_t uid;
+    uid_t NO_UID = -1;
+
+    errno = 0;
+    /* geteuid returns the effective user ID of the calling process */
+    uid = geteuid ();
+    /*
+     * The getpwuid function returns a pointer to a structure containing
+     * the broken-out fields of the record in the password database that
+     * matches the user ID uid.
+     */
+    pw = (uid == NO_UID && errno ? NULL : getpwuid (uid));
+
+    if (!pw)
+        error (EXIT_FAILURE, errno, "cannot find name for user ID %lu", 
+                (unsigned long int) uid);
+    /* prints the member pw_name of struct passwd */
+    puts (pw->pw_name);
+
+    return EXIT_SUCCESS;
+}
