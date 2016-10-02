@@ -1,0 +1,47 @@
+/* hostname - set or print the name of current host system */
+
+#include <getopt.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <error.h>
+#include <unistd.h>
+
+#ifndef INITIAL_HOSTNAME_LENGTH
+# define INITIAL_HOSTNAME_LENGTH 34
+#endif
+
+int
+main (int argc, char **argv)
+{
+    char *hostname;
+
+    /*
+     * The variable optind is the index of the next element to be processed in argv.
+     * The system initializes this value to 1.
+     */
+    if (argc == optind + 1) {
+        /* Set hostname to operand.  */
+        char const *name = argv[optind];
+
+        if (sethostname (name, strlen (name)) != 0)
+            error (EXIT_FAILURE, errno, "cannot set name to %s", name);
+    }
+
+    if (argc <= optind) {
+        /*
+         * The original function here is xgethostname, and it will store
+         * the return hostname in malloc'd storage if success.
+         * but I replace it to gethostname for simplicity.
+         */
+        char hostname[INITIAL_HOSTNAME_LENGTH];
+        if (gethostname(hostname, INITIAL_HOSTNAME_LENGTH) == -1) {
+            error (EXIT_FAILURE, errno, "cannot determine hostname");
+        }
+
+        printf ("%s\n", hostname);
+    }
+
+    return EXIT_SUCCESS;
+}

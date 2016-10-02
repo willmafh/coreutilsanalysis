@@ -1,0 +1,24 @@
+/*
+ * print the hexadecimal identifier for the current host
+ * hostid prints the ip corresponding to the hostname command
+ * its result is switching the first and second locations'
+ * value, the third and fourth locations' value, and transform
+ * the whole into hexadecimal.
+ * e.g.: In my machine, hostname is debian, which corresponding
+ * ip is 127.0.1.1, then switch their values into 0.127.1.1,
+ * and hostid will print it 007f0101.
+ */
+
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+int
+main (int argc, char **argv)
+{
+    unsigned int id;
+    id = gethostid ();
+    id &= 0xffffffff;
+    printf ("%08x\n", id);
+    return EXIT_SUCCESS;
+}
