@@ -1,0 +1,9 @@
+/* Switch the default exit status to failure */
+#define EXIT_STATUS EXIT_FAILURE
+
+/*
+ * This is the first time I see that the directive
+ * #include includes a C file.
+ * The "false" analysis details can refer to "true"
+ */
+#include "true.c"

@@ -1,0 +1,134 @@
+true - Exit with a status code indicating success
+
+The following codes of the program show why it will act like "true" by default.
+
+#ifndef EXIT_STATUS
+    #define EXIT_STATUS EXIT_SUCCESS
+#endif
+
+/* 
+ * In "false":
+ * #define EXIT_STATUS EXIT_FAILURE
+ * so "true" and "false" will change their PROGRAM_NAME depends on EXIT_STATUS
+ */
+#if EXIT_STATUS == EXIT_SUCCESS
+    #define PROGRAM_NAME "true"
+#else
+    #define PROGRAM_NAME "false"
+#endif
+
+/*
+ * proper_name will return the localization of the author
+ * In proper_name, it use gettext to see whether there is a translation
+ * If there is, then it first to see whether the translation contains the
+ * original name, if it is, then it returns the translation, if not, then
+ * it will allocate spaces enough for the string "translation (name)" to
+ * fit in and then return it.
+ * Otherwise, it will return the original, in this example, Jim Meyering.
+ */
+#define AUTHORS propre_name("Jim Meyering")
+
+void
+usage (int status) {
+    /* 
+     * For translation:
+     * #define _(msgid) gettext (msgid)
+     * #define N_(msgid) msgid
+     */
+    printf(_("Usage: %s [ignored command line arguments]\nor:  %s OPTION\n"),
+            program_name, program_name);
+    printf("%s\n\n", _(EXIT_STATUS == EXIT_SUCCESS ?
+                    N_("Exit with a status code indicating success.")
+                    : N_("Exit with a status code indicating failure.")));
+    /*
+     * #define HELP_OPTION_DESCRIPTION _("--help display this help and exit\n")
+     */
+    fputs(HELP_OPTION_DESCRIPTION, stdout);
+    /*
+     * #define VERSION_OPTION_DESCRIPTION _("--version  output version information and exit\n")
+     */
+    fputs (VERSION_OPTION_DESCRIPTION, stdout);
+    /*
+     * #define USAGE_BUILTIN_WARNING _("\n" \
+     * "NOTE: your shell may have its own version of %s, which usually supersedes\n" \
+     * "the version described here.  Please refer to your shell's documentation\n" \
+     * "for details about the options it supports.\n")
+     */
+    printf (USAGE_BUILTIN_WARNING, PROGRAM_NAME);
+    /*
+     * It outputs further information locate at the end of the man page.
+     */
+    emit_ancillary_info (PROGRAM_NAME);
+    exit (status);
+}
+
+int
+main(int argc, char **argv)
+{
+    /* 
+     * true will ignore all other arguments except --help and --version
+     * So there use the condition (argc == 2) instead of using getopt_long
+     * function to parse the arguments
+     */
+    if (argc == 2) {
+        /* 
+         * The initialize_main function is especially for OS2.
+         * But it's useless for other operating systems.
+         * #define initialize_main(ac, av)
+         */
+        initialize_main(&argc, &argv);
+        /*
+         * set_program_name will remove the prefix "<dirname>/.libs/"
+         * and "<dirname>/.libs/lt-", which was created by libtool,  if
+         * argv[0] contains it and it'll set the variable program_name
+         * and on glibc systems, it'll will also set the variable
+         * program_invocation_name, which is declared in the system header
+         * file <errno.h>. But it'll not remove prefix like this
+         * /some/hidden/place/bin/ in argv[0].
+         */
+        set_program_name(argv[0]);
+        /*
+         * If locale is an empty string, "", each part of the locale that
+         * should be modified is set according to the environment variables.
+         * For glibc, first, LC_ALL is inspected, then other categories
+         * environment variables, and last, LANG.
+         * A program may be made portable to all locales by calling:
+         * setlocale(LC_ALL, "")
+         */
+        setlocale(LC_ALL, "");
+
+        /*
+         * bindtextdomain sets directory containing .mo files
+         * textdomain sets domain for future gettext calls
+         * #define PACKAGE "coreutils"
+         * #define LOCALEDIR "/usr/local/share/locale"
+         */
+        bindtextdomain(PACKAGE, LOCALEDIR);
+        textdomain(PACKAGE);
+        /*
+         * register close_stdout to be called when the process
+         * is going to terminate. close_stdout will close standard
+         * output and also close standard error. On error, _exit
+         * with status 'exit_failure'.
+         */
+        atexit(close_stdout);
+        /*
+         * #define STREQ(a, b) (strcmp(a, b) == 0)
+         */
+        if (STREQ (argv[1], "--help")) {
+            usage (EXIT_STATUS);
+        }
+        /*
+         * Display the --version information the standard way
+         */
+        if (STREQ (argv[1], "--version")) {
+            version_etc(stdout, PROGRAM_NAME, PACKAGE_NAME,
+                    Version, AUTHORS, (char *)NULL); 
+        }
+    }
+    /*
+     * "true" will return true, and "false" reset EXIT_STATUS
+     * so it will return false by default.
+     */
+    return EXIT_STATUS;
+}
