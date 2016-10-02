@@ -1,0 +1,19 @@
+/* 
+ * Simply call the system 'unlink' function
+ * It can only unlink one file at a time
+ */
+
+#include <stdio.h>
+#include <error.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+int
+main (int argc, char **argv)
+{
+  if (unlink (argv[optind]) != 0)
+    error (EXIT_FAILURE, errno, "cannot unlink %s", argv[optind]);
+
+  return EXIT_SUCCESS;
+}
